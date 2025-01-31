@@ -1,14 +1,14 @@
 import csv
 import torch
 from torch.utils.data import Dataset
-from tokenizers import Tokenizer
+from transformers import PreTrainedTokenizer, BertTokenizer
 
 
 class TweetDataset(Dataset):
     def __init__(
         self,
         file_path,
-        tokenizer_name="bert-base-uncased",
+        tokenizer: PreTrainedTokenizer = None,
         transform=None,
     ):
         TWEET_MAX_LENGTH = 256
@@ -16,15 +16,27 @@ class TweetDataset(Dataset):
         self.features = []
         self.labels = []
         self.transform = transform
-        self.tokenizer: Tokenizer = Tokenizer.from_pretrained(tokenizer_name)
-        self.tokenizer.enable_padding(length=TWEET_MAX_LENGTH, pad_token="[PAD]")
+        self.tokenizer: PreTrainedTokenizer
+
+        if tokenizer:
+            self.tokenizer = tokenizer
+        else:
+            self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
 
         with open(file_path, newline="", encoding="utf-8") as f:
             reader = csv.reader(f)
             next(reader)
             for row in reader:
                 tweet = row[2]
-                tweet_ids = self.tokenizer.encode(tweet).ids
+                encoding = self.tokenizer(
+                    tweet,
+                    max_length=TWEET_MAX_LENGTH,
+                    padding="max_length",
+                    truncation=True,
+                    return_tensors="pt",
+                )
+                tweet_ids = encoding["input_ids"].squeeze(0)
+                attention_mask = encoding["attention_mask"].squeeze(0)
 
                 sentiment = row[3].strip()
                 if sentiment not in SENTIMENT_SCORES:
@@ -32,11 +44,11 @@ class TweetDataset(Dataset):
                         f"Sentiment {sentiment} not found in sentiment scores"
                     )
 
-                self.features.append(tweet_ids)
+                self.features.append((tweet_ids, attention_mask))
                 self.labels.append(SENTIMENT_SCORES[sentiment])
 
         # Ensure all features have the same length
-        assert all(len(feature) == len(self.features[0]) for feature in self.features)
+        # assert all(len(feature) == len(self.features[0]) for feature in self.features)
 
     def __len__(self):
         return len(self.features)

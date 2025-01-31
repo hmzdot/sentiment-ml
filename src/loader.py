@@ -10,7 +10,7 @@ class TweetLoader(DataLoader):
     def from_file(
         cls,
         file_path,
-        tokenizer_name="bert-base-uncased",
+        tokenizer=None,
         transform=None,
         batch_size=32,
         shuffle=True,
@@ -18,7 +18,7 @@ class TweetLoader(DataLoader):
     ):
         dataset = TweetDataset(
             file_path=file_path,
-            tokenizer_name=tokenizer_name,
+            tokenizer=tokenizer,
             transform=transform,
         )
 
