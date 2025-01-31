@@ -48,7 +48,7 @@ class TweetDataset(Dataset):
                 self.labels.append(SENTIMENT_SCORES[sentiment])
 
         # Ensure all features have the same length
-        # assert all(len(feature) == len(self.features[0]) for feature in self.features)
+        assert all(len(feature) == len(self.features[0]) for feature in self.features)
 
     def __len__(self):
         return len(self.features)
