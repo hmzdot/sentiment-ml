@@ -1,33 +1,48 @@
 import csv
 import torch
 from torch.utils.data import Dataset
+from tokenizers import Tokenizer
 
 
 class TweetDataset(Dataset):
-    def __init__(self, file_path, transform=None):
+    def __init__(
+        self,
+        file_path,
+        tokenizer_name="bert-base-uncased",
+        transform=None,
+    ):
+        TWEET_MAX_LENGTH = 256
+
         self.features = []
         self.labels = []
         self.transform = transform
+        self.tokenizer: Tokenizer = Tokenizer.from_pretrained(tokenizer_name)
+        self.tokenizer.enable_padding(length=TWEET_MAX_LENGTH, pad_token="[PAD]")
 
         with open(file_path, newline="", encoding="utf-8") as f:
             reader = csv.reader(f)
             next(reader)
             for row in reader:
                 tweet = row[2]
+                tweet_ids = self.tokenizer.encode(tweet).ids
+
                 sentiment = row[3].strip()
                 if sentiment not in SENTIMENT_SCORES:
                     raise ValueError(
                         f"Sentiment {sentiment} not found in sentiment scores"
                     )
 
-                self.features.append(tweet)
+                self.features.append(tweet_ids)
                 self.labels.append(SENTIMENT_SCORES[sentiment])
+
+        # Ensure all features have the same length
+        assert all(len(feature) == len(self.features[0]) for feature in self.features)
 
     def __len__(self):
         return len(self.features)
 
     def __getitem__(self, idx):
-        x = torch.tensor(self.features[idx], dtype=torch.float32)
+        x = torch.tensor(self.features[idx], dtype=torch.long)
         y = torch.tensor(self.labels[idx], dtype=torch.float32)
 
         if self.transform:
