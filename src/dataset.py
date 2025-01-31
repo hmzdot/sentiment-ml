@@ -54,13 +54,13 @@ class TweetDataset(Dataset):
         return len(self.features)
 
     def __getitem__(self, idx):
-        x = torch.tensor(self.features[idx], dtype=torch.long)
-        y = torch.tensor(self.labels[idx], dtype=torch.float32)
+        (input, mask) = self.features[idx]
+        label = torch.tensor(self.labels[idx], dtype=torch.float32)
 
         if self.transform:
-            x = self.transform(x)
+            input = self.transform(input)
 
-        return x, y
+        return input, mask, label
 
 
 # LLM assigned sentiment scores where -1.0 is compelte negative and 1.0 is
