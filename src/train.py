@@ -7,7 +7,7 @@ from transformers import BertForSequenceClassification, BertTokenizer
 from torch.utils.data import random_split, DataLoader
 from tqdm import tqdm
 
-DATASET_PATH = "./dataset.csv"
+DATASET_PATH = "./data/tweets.csv"
 LEARNING_RATE = 2e-5
 EPOCHS = 3
 

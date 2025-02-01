@@ -1,7 +1,10 @@
+import re
 import csv
 import torch
 from torch.utils.data import Dataset
 from transformers import PreTrainedTokenizer, BertTokenizer
+
+EMOJI_PATH = "data/emojis.txt"
 
 
 class TweetDataset(Dataset):
@@ -23,11 +26,14 @@ class TweetDataset(Dataset):
         else:
             self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
 
+        emojis = self._load_emojis(EMOJI_PATH)
+        print(emojis)
+
         with open(file_path, newline="", encoding="utf-8") as f:
             reader = csv.reader(f)
             next(reader)
             for row in reader:
-                tweet = row[2]
+                tweet = self._replace_emojis(row[2], emojis)
                 encoding = self.tokenizer(
                     tweet,
                     max_length=TWEET_MAX_LENGTH,
@@ -49,6 +55,40 @@ class TweetDataset(Dataset):
 
         # Ensure all features have the same length
         assert all(len(feature) == len(self.features[0]) for feature in self.features)
+
+    def _load_emojis(self, emoji_path):
+        emojis = {}
+        with open(emoji_path, "r") as f:
+            for line in f.readlines():
+                # Extract the emoji and description where the line is in the format
+                # {code}{\s*};{\s*}{fully-qualified}{\s*}#{\s*}{emoji}{\s*}{description}
+                pattern = r"^[A-F0-9\s]+;\s*fully-qualified\s*#\s*(\S+)\s+(.+)$"
+                match = re.match(pattern, line.strip())
+                if match:
+                    emoji, description = match.groups()
+                    emojis[emoji] = description.strip()
+        return emojis
+
+    def _replace_emojis(self, text, emoji_dict):
+        # Unicode ranges for emojis
+        emoji_pattern = re.compile(
+            "["
+            "\U0001f600-\U0001f64f"  # emoticons
+            "\U0001f300-\U0001f5ff"  # symbols & pictographs
+            "\U0001f680-\U0001f6ff"  # transport & map symbols
+            "\U0001f1e0-\U0001f1ff"  # flags
+            "\U0001f900-\U0001f9ff"  # supplemental symbols
+            "\u2600-\u26ff"  # miscellaneous symbols
+            "\u2700-\u27bf"  # dingbats
+            "]+",
+            flags=re.UNICODE,
+        )
+
+        def replace_match(match):
+            emoji = match.group(0)
+            return f"[{emoji_dict.get(emoji, 'emoji')}]"
+
+        return emoji_pattern.sub(replace_match, text)
 
     def __len__(self):
         return len(self.features)
