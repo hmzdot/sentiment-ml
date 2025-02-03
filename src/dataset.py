@@ -27,7 +27,6 @@ class TweetDataset(Dataset):
             self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
 
         emojis = self._load_emojis(EMOJI_PATH)
-        print(emojis)
 
         with open(file_path, newline="", encoding="utf-8") as f:
             reader = csv.reader(f)
