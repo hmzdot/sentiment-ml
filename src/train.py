@@ -5,9 +5,11 @@ from datetime import datetime
 from dataset import TweetDataset
 from transformers import BertForSequenceClassification, BertTokenizer, logging
 from torch.utils.data import random_split, DataLoader
+from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 logging.set_verbosity_error()
+writer = SummaryWriter()
 
 
 def train(dataset_path: str, learning_rate: float, epochs: int):
@@ -42,6 +44,8 @@ def train(dataset_path: str, learning_rate: float, epochs: int):
     for epoch in range(epochs):
         model.train()
         total_loss = 0
+
+        i = epoch * len(train_loader)
         for input, mask, labels in tqdm(train_loader, desc=f"Epoch #{epoch+1}"):
             input = input.to(device_name)
             mask = mask.to(device_name)
@@ -54,6 +58,9 @@ def train(dataset_path: str, learning_rate: float, epochs: int):
             # Compute loss
             loss = criterion(logits, labels)
             total_loss += loss.item()
+
+            writer.add_scalar("Loss/train", loss.item(), i)
+            i += 1
 
             # Backward pass
             optimizer.zero_grad()
@@ -94,3 +101,4 @@ if __name__ == "__main__":
         learning_rate=2e-5,
         epochs=3,
     )
+    writer.flush()
