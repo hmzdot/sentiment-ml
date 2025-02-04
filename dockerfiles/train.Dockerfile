@@ -5,4 +5,4 @@ ADD . /app
 
 RUN pip install --upgrade pip && pip install .
 
-CMD ["python", "train.py"]
+CMD ["python", "src/train.py"]

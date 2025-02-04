@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  train:
+    build:
+      context: .
+      dockerfile: dockerfiles/train.Dockerfile
+    volumes:
+      - ./snapshots:/app/snapshots
+    command: ["bash", "./dockerfiles/train.sh"]
+
+  inference:
+    build:
+      context: .
+      dockerfile: dockerfiles/eval.Dockerfile
+    volumes:
+      - ./snapshots:/app/snapshots
+    ports:
+      - "8000:8000"
+    depends_on:
+      - train  # Ensure training completes first
+    command: ["uvicorn", "eval_server:app", "--host", "0.0.0.0", "--port", "8000"]

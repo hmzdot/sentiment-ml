@@ -5,4 +5,4 @@ ADD . /app
 
 RUN pip install --upgrade pip && pip install .
 
-CMD ["python", "eval.py"]
+CMD ["python", "src/eval.py"]
