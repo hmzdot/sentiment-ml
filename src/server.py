@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from eval import eval
+from .eval import eval
 import os
 
 app = FastAPI()
@@ -31,6 +31,6 @@ def evaluate(text: str):
 
     return {
         "text": text,
-        "sentiment_score": sentiment,
+        "sentiment_score": f"{sentiment:.2f}",
         "prediction": prediction,
     }

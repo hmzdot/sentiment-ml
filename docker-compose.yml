@@ -19,4 +19,4 @@ services:
       - "8000:8000"
     depends_on:
       - train  # Ensure training completes first
-    command: ["uvicorn", "eval_server:app", "--host", "0.0.0.0", "--port", "8000"]
+    command: ["uvicorn", "src.server:app", "--host", "0.0.0.0", "--port", "8000"]
