@@ -45,6 +45,6 @@ docker run --rm sentiment-eval snapshots/{model_name} {text}
 ## 4b. Run evaluation server
 uvicorn src.server:app --host 0.0.0.0 --port 8000
 
-curl -X POST http://localhost:8000/evaluate/?text=hello
+curl -X POST "http://localhost:8000/evaluate/?text=hello"
 # {"text":"hello","sentiment_score":"0.67","prediction":"Positive"}
 ```
