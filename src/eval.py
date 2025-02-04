@@ -20,22 +20,21 @@ def get_device():
     return torch.device("cpu")
 
 
-def main():
-    args = parse_args()
+def eval(model_snapshot: str, text: str) -> float:
     device = get_device()
 
     model = BertForSequenceClassification.from_pretrained(
         "bert-base-uncased",
         num_labels=1,
     )
-    model.load_state_dict(torch.load(args.model_snapshot, weights_only=True))
+    model.load_state_dict(torch.load(model_snapshot, weights_only=True))
     model = model.to(device)
     model.eval()
 
     tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
 
     input = tokenizer(
-        args.text,
+        text,
         max_length=256,
         padding="max_length",
         truncation=True,
@@ -54,9 +53,12 @@ def main():
         logits = outputs.logits.squeeze().cpu()
         sentiment = logits.item()
 
-    sentiment_readable = "Positive" if sentiment > 0.0 else "Negative"
-    print(f"Sentiment: {sentiment_readable} ({sentiment})")
+    return sentiment
 
 
 if __name__ == "__main__":
-    main()
+    model_snapshot, text = parse_args()
+    sentiment = eval(model_snapshot, text)
+
+    sentiment_text = "Positive" if sentiment > 0.5 else "Negative"
+    print(f"Sentiment: {sentiment_text} ({sentiment:.2f})")
